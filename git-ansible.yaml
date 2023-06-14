@@ -1,0 +1,11 @@
+---
+- hosts: 192.168.56.15  
+  become: yes
+  tasks:
+   - name: Install Git
+     apt: name=git state=present
+   - name: git clone
+     git:
+      repo: https://github.com/varshith94/game-of-life.git
+      dest: /home/ansible/terraform
+      version: continuous-delivery

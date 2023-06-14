@@ -1,0 +1,81 @@
+---
+- hosts: 192.168.56.3
+  become: true
+  tasks:
+    - name: create a user for tomcat 
+      user:
+        name: tomcat 
+        create_home: true 
+        shell: /bin/bash
+        comment: "tomcat user account"
+        expires: -1
+        password: "{{'tomcat' | password_hash('sha512','A512')}}"
+    - name: setup visudo permissions for tomcat user 
+      copy:
+        dest: /etc/sudoers.d/tomcat
+        content: 'tomcat ALL=(ALL:ALL) NOPASSWD: ALL'
+        validate: /usr/sbin/visudo -cf %s
+    - name: install jave 
+      yum: name=java-11-openjdk state=present 
+    - name: Download tomcat url 
+      get_url:
+        url: https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.75/bin/apache-tomcat-9.0.75.zip
+        dest: /tmp
+    - name: copy 
+      copy:
+        src: /tmp/apache-tomcat-9.0.75.zip
+        dest: /opt/
+        remote_src: yes 
+    - name: install unzip 
+      yum: name=unzip state=present 
+    - name: unarchive files 
+      unarchive: 
+        src: /opt/apache-tomcat-9.0.75.zip
+        dest: /opt/
+        remote_src: yes 
+    - name: set permissions 
+      file:
+        path: /opt/apache-tomcat-9.0.75
+        owner: tomcat 
+        group: tomcat 
+        recurse: true
+        state: directory 
+    - name: create softlink
+      file: 
+        src: /opt/apache-tomcat-9.0.75 
+        dest: /opt/tomcat9
+        owner: tomcat
+        group: tomcat 
+        state: link 
+    - name: create a tomcat service 
+      file:
+        path: /etc/systemd/system/tomcat.service
+        state: touch 
+    - name: edit tomcat service 
+      blockinfile:
+        path: /etc/systemd/system/tomcat.service
+        block: |
+          [Unit]
+          Description = Apache Tomcat 9
+          After = syslog.target network.target
+          [Service]
+          User = tomcat
+          Group = tomcat
+          Type = oneshot
+          PIDFile =/optapache-tomcat-9.0.75/tomcat.pid
+          RemainAfterExit = yes
+          ExecStart =/opt/apache-tomcat-9.0.75/bin/startup.sh
+          ExecStop =/opt/apache-tomcat-9.0.75/bin/shutdown.sh
+          ExecReStart =/opt/apache-tomcat-9.0.75/bin/shutdown.sh;/opt/apache-tomcat-9.0.75/bin/startup.sh
+          [Install]
+          WantedBy = multi-user.target
+    - name: change ownership tomcat service 
+      file:
+        path: /etc/systemd/system/tomcat.service
+        mode: 0755
+    - name: start tomcat service 
+      systemd:
+        name: tomcat.service 
+        state: started 
+        daemon_reload: yes
+        enabled: yes

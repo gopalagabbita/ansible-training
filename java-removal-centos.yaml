@@ -1,0 +1,10 @@
+---
+- hosts: 192.168.56.3
+  become: true 
+  tasks:
+   - name: remove java
+     yum: 
+       name: java-11-openjdk-devel
+       state: absent
+   - name: remove path
+     shell: rm -rf "/usr/lib/jvm/java-11-openjdk-11.0.19.0.7-1.el7_9.x86_64/bin/java"

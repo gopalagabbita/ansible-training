@@ -1,0 +1,22 @@
+---
+- hosts: 192.168.56.3
+  gather_facts: yes
+  become: true
+  vars: 
+    person: Devopsadmin
+    course: ansible
+    place: rajamundry
+    state: andhrapradesh
+  tasks: 
+   - name: Install httpd 
+     yum: name=httpd state=present
+   - name: copy the file 
+     template:
+       src: index.html
+       dest: /var/www/html/index.html
+     notify: restart httpd server
+  handlers:
+    - name: restart httpd server 
+      service: 
+        name: httpd 
+        state: restarted

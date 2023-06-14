@@ -1,0 +1,33 @@
+---
+- hosts: 192.168.56.15
+  become: true 
+  tasks: 
+   - name: update 
+     apt: update_cache=yes 
+   - name: installing packages 
+     apt:
+       name: "{{item}}"
+       state: present 
+     loop:
+       - ca-certificates 
+       - curl 
+       - gnupg
+   - name: adding GPG key 
+     apt_key: 
+       url: https://download.docker.com/linux/ubuntu/gpg 
+   - name: add apt repo 
+     apt_repository:
+       repo: deb https://download.docker.com/linux/ubuntu focal stable
+       state: present
+   - name: install docker 
+     apt: 
+       name: "{{item}}"
+       state: latest 
+     loop: 
+       - docker-ce 
+       - docker-ce-cl
+       - containerd.io 
+       - docker-buildx-plugin 
+       - docker-compose-plugin
+
+

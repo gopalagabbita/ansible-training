@@ -1,0 +1,6 @@
+---
+- hosts: 192.168.56.15
+  become: true
+  tasks:
+   - name: create a file
+     shell: cat file1.txt

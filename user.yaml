@@ -1,0 +1,17 @@
+---
+- hosts: all 
+  become: true 
+  tasks:
+    - name: creating a user 
+      user: 
+        name: maven 
+        create_home: true 
+        shell: /bin/bash
+        comment: "maven user account"
+        expires: -1
+        password: "{{ 'maven' | password_hash('sha512','A512')}}"
+    - name: setup visudo permissions for maven user 
+      copy:
+        dest: /etc/sudoers.d/maven
+        content: 'maven ALL=(ALL:ALL) NOPASSWD: ALL'
+        validate: /usr/sbin/visudo -cf %s

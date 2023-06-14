@@ -1,0 +1,12 @@
+- hosts: 192.168.56.3
+  become: yes
+  tasks:
+   - name: Install Packages
+     yum: 
+       name: '{{item}}'
+       update_cache: yes 
+       state: latest
+     loop:
+        - vim
+        - lsof
+        - nano

@@ -1,0 +1,76 @@
+---
+- hosts: 192.168.56.15
+  become: true
+  tasks:
+    - name: java-1.8.0-openjdk
+      apt: name=openjdk-8-jre-headless state=present 
+    - name: switching directories 
+      shell:
+        cmd: cd /opt/
+    - name: Installing packages
+      apt: name=tar state=present  
+    - name: downloading nexus application 
+      get_url:
+        url: https://download.sonatype.com/nexus/3/nexus-3.54.1-01-unix.tar.gz
+        dest: /opt/
+    - name: Unarchiving the url
+      unarchive:
+        src: /opt/nexus-3.54.1-01-unix.tar.gz
+        dest: /opt/
+        remote_src: yes 
+    - name: Delete Nexus Tar file 
+      file:
+        path: /opt/nexus-3.54.1-01-unix.tar.gz 
+        state: absent
+    - name: renaming the source file
+      shell: "mv /opt/nexus-3.54.1-01 /opt/nexus"
+    - name: Creating Nexus user account 
+      user: 
+        name: nexus 
+        create_home: true 
+        shell: /bin/bash 
+        comment: "nexus user account"
+        expires: -1
+        password: "{{ 'nexus' | password_hash('sha512','A512')}}"
+    - name: adding visudo permissions for nexus user
+      copy:
+        dest: //etc/sudoers.d/nexus 
+        content: 'nexus ALL=(ALL:ALL) NOPASSWD: ALL'
+        validate: //usr/sbin/visudo -cf %s 
+    - name: changing permissions /opt/nexus
+      file:
+        path: /opt/nexus
+        owner: nexus 
+        group: nexus 
+        recurse: true 
+        state: directory
+        mode: u=rwX,g=rwX,o=rX 
+    - name: changing permissions on /opt/sonatype
+      file:
+        path: /opt/sonatype-work 
+        owner: nexus 
+        group: nexus 
+        recurse: true 
+        state: directory 
+        mode : u=rwX,g=rwX,o=rX 
+    - name: updating nexus.rc file 
+      lineinfile:
+        dest: /opt/nexus/bin/nexus.rc 
+        regexp: '#run_as_user'
+        line: "run_as_user=nexus"
+        backrefs: true
+    - name: create symbolic link 
+      file:
+        src: /opt/nexus/bin/nexus 
+        dest: /etc/init.d/nexus 
+        state: link 
+    - name: Enabling nexus service 
+      service:
+        name: nexus 
+        enabled: yes 
+    - name: Start the nexus service 
+      systemd:
+        name: nexus.service  
+        state: started
+        daemon_reload: yes
+        enabled: yes

@@ -1,0 +1,8 @@
+---
+- hosts: all 
+  become: true 
+  tasks:
+   - name: create a file 
+     file:
+       path: /tmp/devops
+       state: touch

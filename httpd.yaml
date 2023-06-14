@@ -1,0 +1,10 @@
+---
+- hosts: 192.168.56.3 
+  become: true 
+  tasks:
+   - name: Install httpd 
+     yum: name=httpd state=present
+   - name: Restart the service
+     service:
+       name: httpd 
+       state: started

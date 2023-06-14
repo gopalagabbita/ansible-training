@@ -1,0 +1,33 @@
+---
+- hosts: 192.168.56.3
+  become: true 
+  tasks:
+   - name: Installing java 
+     yum: name=java-11-openjdk state=present 
+   - name:  add repo 
+     get_url: 
+       url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
+       dest: /etc/yum.repos.d/jenkins.repo 
+   - name: add key 
+     rpm_key:
+       state: present 
+       key:  https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+   - name: Install Jenkins
+     yum:
+       name: jenkins 
+       state: present 
+   - name: start jenkins service
+     service: 
+       name: jenkins 
+       state: started 
+   - name: init password jenkins 
+     shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+     changed_when: false 
+     register: result 
+   - name: print init password through jenkins
+     debug: 
+       var: result.stdout
+   - name: stop firewalld
+     service:
+       name: firewalld
+       state: stopped

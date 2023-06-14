@@ -1,0 +1,12 @@
+---
+ - hosts: 192.168.56.3 
+   become: true 
+   tasks:
+     - name: uninstall wget 
+       yum: name=wget state=absent 
+     - name: uninstall jav
+       yum: name=java-11-openjdk state=absent 
+     - name: uninstall jenkins 
+       yum: name=jenkins state=absent
+     - name: removal of jenkins folder 
+       shell: rm -rf /var/lib/jenkins
